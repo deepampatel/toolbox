@@ -1,12 +1,20 @@
 [package]
-name = "rucksack"
+name = "borsa"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = "3.0"
-uuid = { version = "0.8", features = ["serde", "v4"] }
-openssl = { version = "0.10", features = ["vendored"] }
-hex = "0.4"
+clap = { version = "4.0.32", features = ["string"] }
+openssl = '*'
+
+lipsum = "0.8.2"
+log = "0.4.17"
+passwords = "3.1.12"
+rand = "0.8"
+rpassword = "7.1"
+uuid = {version = "1.2.2",  features = ["v4"]}
+base64 = "0.21"
+anyhow = "1.0"
+clap_complete = "4.0"
