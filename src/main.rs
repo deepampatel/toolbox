@@ -1,6 +1,7 @@
 use clap::{App, Arg, SubCommand};
 use uuid::Uuid;
 use openssl::hash::{hash, MessageDigest};
+use rpassword::prompt_password;
 
 fn main() {
     let matches = App::new("rucksack")
@@ -15,26 +16,14 @@ fn main() {
                  .long("count")))
         .subcommand(SubCommand::with_name("hash")
             .about("hash password")
-            .arg(Arg::with_name("password")
-                 .help("Password to hash")
-                 .required(true)
-                 .index(1)))
-        .subcommand(SubCommand::with_name("store")
-            .about("store command")
-            .arg(Arg::with_name("name")
-                 .help("Name of the command to store")
-                 .required(true)
-                 .index(1))
-            .arg(Arg::with_name("command")
-                 .help("Command to store")
-                 .required(true)
-                 .index(2)))
-        .subcommand(SubCommand::with_name("get")
-            .about("get stored command")
-            .arg(Arg::with_name("name")
-                 .help("Name of the command to get")
-                 .required(true)
-                 .index(1)))
+            .arg(Arg::with_name("method")
+                .help("Hashing method to use (md5, sha1, sha256, sha512)")
+                .required(true)
+                .index(1))
+            .arg(Arg::with_name("salt")
+                .help("Salt to use for hashing (leave empty for random salt)")
+                .long("salt")
+                .takes_value(true)))
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("generate") {
@@ -45,23 +34,28 @@ fn main() {
         }
     }
 
-    if let Some(matches) = matches.subcommand_matches("hash") {
-        let password = matches.value_of("password").unwrap();
-        // hash password
-        let data = b"\x42\xF4\x97\xE0";
-        let res = hash(MessageDigest::md5(), data).unwrap();
-        // res string
-        let res_str = format!("{:x}", res);
-        println!("Hash: {}", res_str);
+    // if let Some(matches) = matches.subcommand_matches("hash") {
+    //     let salt = match matches.value_of("salt") {
+    //         Some(salt) => salt.as_bytes(),
+    //         None => openssl::crypto::rand::rand_bytes(8),
+    //     };
+    //     let password = rpassword::prompt_password("Password: ")?;
+    //     let method = matches.value_of("method").unwrap();
 
-    }
+    //     let hashed_password = match method {
+    //         "md5" => hash(MessageDigest::md5(), password.as_bytes()).unwrap(),
+    //         "sha1" => hash(MessageDigest::sha1(), password.as_bytes()).unwrap(),
+    //         "sha256" => hash(MessageDigest::sha256(), password.as_bytes()).unwrap(),
+    //         "sha512" => hash(MessageDigest::sha512(), password.as_bytes()).unwrap(),
+    //         _ => panic!("Invalid hashing method"),
+    //     };
 
-    if let Some(matches) = matches.subcommand_matches("store") {
-        let name = matches.value_of("name").unwrap();
-        let command = matches.value_of("command").unwrap();
-        println!("Name: {}", name);
-        println!("Command: {}", command);
-    }
+    //     // Digest bytes array to hex string
+    //     let hashed_password = hashed_password.iter().map(|b| format!("{:02x}", b)).collect::<String>();
+
+    //     println!("Hashed password: {}", hashed_password);
+
+    // }
 
 }
 
