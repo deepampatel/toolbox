@@ -8,7 +8,7 @@ const NAME: &str = env!("CARGO_PKG_NAME");
 
 fn cli() -> Command{
         Command::new(NAME)
-        .about("Temporary password generator")
+        .about("Tools for daily use.")
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .subcommand(Command::new("generate")
