@@ -71,7 +71,7 @@ fn run(matches: &ArgMatches) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let borsa = cli();
-    let matches = borsa.clone().get_matches();
+    let toolbox = cli();
+    let matches = toolbox.clone().get_matches();
     run(&matches)
 }

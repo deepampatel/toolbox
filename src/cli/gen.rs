@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::ArgMatches;
 
 // import * from ../generators in rust
-use borsa::generator::{
+use toolbox::generator::{
     password,uuid
 };
 
