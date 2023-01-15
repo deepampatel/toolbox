@@ -1,65 +1,77 @@
-use clap::{App, Arg, SubCommand};
-use uuid::Uuid;
-use openssl::hash::{hash, MessageDigest};
-use rpassword::prompt_password;
+use clap::{ Arg, Command,ArgAction, ArgMatches};
+use anyhow::Result;
 
-fn main() {
-    let matches = App::new("rucksack")
-        .version("0.1.0")
-        .author("Your Name <you@example.com>")
-        .about("A utility CLI for generating UUIDs, hashing passwords, and storing and quickly accessing one-liner commands")
-        .subcommand(SubCommand::with_name("generate")
-            .about("generate UUID")
-            .arg(Arg::with_name("count")
-                 .help("Number of UUIDs to generate")
-                 .default_value("1")
-                 .long("count")))
-        .subcommand(SubCommand::with_name("hash")
-            .about("hash password")
-            .arg(Arg::with_name("method")
-                .help("Hashing method to use (md5, sha1, sha256, sha512)")
-                .required(true)
-                .index(1))
-            .arg(Arg::with_name("salt")
-                .help("Salt to use for hashing (leave empty for random salt)")
-                .long("salt")
-                .takes_value(true)))
-        .get_matches();
+mod cli;
+mod util;
 
-    if let Some(matches) = matches.subcommand_matches("generate") {
-        let count: u32 = matches.value_of("count").unwrap().parse().unwrap();
-        for _i in 0..count {
-            let uuid = Uuid::new_v4();
-            println!("UUID: {}", uuid);
-        }
-    }
+const NAME: &str = env!("CARGO_PKG_NAME");
 
-    // if let Some(matches) = matches.subcommand_matches("hash") {
-    //     let salt = match matches.value_of("salt") {
-    //         Some(salt) => salt.as_bytes(),
-    //         None => openssl::crypto::rand::rand_bytes(8),
-    //     };
-    //     let password = rpassword::prompt_password("Password: ")?;
-    //     let method = matches.value_of("method").unwrap();
-
-    //     let hashed_password = match method {
-    //         "md5" => hash(MessageDigest::md5(), password.as_bytes()).unwrap(),
-    //         "sha1" => hash(MessageDigest::sha1(), password.as_bytes()).unwrap(),
-    //         "sha256" => hash(MessageDigest::sha256(), password.as_bytes()).unwrap(),
-    //         "sha512" => hash(MessageDigest::sha512(), password.as_bytes()).unwrap(),
-    //         _ => panic!("Invalid hashing method"),
-    //     };
-
-    //     // Digest bytes array to hex string
-    //     let hashed_password = hashed_password.iter().map(|b| format!("{:02x}", b)).collect::<String>();
-
-    //     println!("Hashed password: {}", hashed_password);
-
-    // }
-
+fn cli() -> Command{
+        Command::new(NAME)
+        .about("Temporary password generator")
+        .arg_required_else_help(true)
+        .allow_external_subcommands(true)
+        .subcommand(Command::new("generate")
+                        .about("generate a secret")
+                        .arg(
+                            Arg::new("type")
+                                .help("the type of generator to use")
+                                .short('t')
+                                .long("type")
+                                .default_value("uuid++")
+                                .value_parser(["lipsum", "random", "uuid", "uuid+", "uuid++", ]),
+                        )
+                        .arg(
+                            Arg::new("length")
+                                .help("the character length of secret to generate (ignored for fixed-length generator types)")
+                                .short('l')
+                                .long("length")
+                                .value_parser(clap::value_parser!(usize))
+                                .default_value("12"),
+                        )
+                        .arg(
+                            Arg::new("suffix-length")
+                                .help("the character length of a random suffix (for generator types that support suffixes)")
+                                .long("suffix-length")
+                                .value_parser(clap::value_parser!(usize))
+                                .default_value("4"),
+                        )
+                        .arg(
+                            Arg::new("word-count")
+                                .help("the number of words to generate (for generator types that assemble words)")
+                                .short('w')
+                                .long("word-count")
+                                .value_parser(clap::value_parser!(usize))
+                                .default_value("4"),
+                        )
+                        .arg(
+                            Arg::new("delimiter")
+                                .help("the character used to join parts (for generator types that join parts)")
+                                .short('d')
+                                .long("delimiter")
+                                .default_value("-"),
+                        )
+                        .arg(
+                            Arg::new("encode")
+                                .help("encode the generated password (uses base64)")
+                                .short('e')
+                                .long("encode")
+                                .action(ArgAction::SetTrue),
+                        ),
+                )
 }
 
+fn run(matches: &ArgMatches) -> Result<()> {
+    match matches.subcommand() {
+        Some(("generate", gen_matches)) => cli::gen::new(gen_matches)?,
+        Some((&_, _)) => todo!(),
+        None => todo!(),
+    }
+    Ok(())
+}
 
-// To run 
-// cargo run -- generate --count 5
-// cargo run -- hash password
+fn main() -> Result<()> {
+    let borsa = cli();
+    let matches = borsa.clone().get_matches();
+    run(&matches)
+}
